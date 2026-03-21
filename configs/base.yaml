@@ -1,0 +1,64 @@
+# configs/base.yaml
+project:
+  name: courtroom-diarizer
+  version: "1.0.0"
+
+paths:
+  data_raw:        data/raw
+  data_processed:  data/processed
+  annotations:     data/annotations
+  logs:            logs
+  checkpoints:     checkpoints
+  outputs:         outputs
+
+audio:
+  sample_rate:     16000
+  channels:        1
+  bit_depth:       16
+  target_lufs:     -23
+  lufs_lra:        7
+  lufs_tp:         -2
+  highpass_hz:     80
+  max_clip_pct:    0.1
+  min_duration_s:  1.0
+
+vad:
+  model:              "pyannote/segmentation-3.0"
+  onset:              0.5
+  offset:             0.45
+  min_duration_on:    0.5
+  min_duration_off:   0.3
+
+segmentation:
+  window_duration:    1.5
+  window_step:        0.75
+  min_segment_s:      0.5
+
+embedding:
+  model:              "pyannote/embedding"
+  dimension:          192
+  normalize:          true
+
+clustering:
+  method:             "ahc"
+  metric:             "cosine"
+  linkage:            "average"
+  distance_threshold: 0.65
+  spectral_sigma:     0.5
+  max_speakers:       10
+
+pipeline:
+  model:              "pyannote/speaker-diarization-3.1"
+  use_gpu:            false
+  batch_size:         32
+
+evaluation:
+  collar:             0.25
+  skip_overlap:       false
+  der_threshold:      0.20
+
+output:
+  write_rttm:         true
+  write_json:         true
+  write_srt:          true
+  json_indent:        2

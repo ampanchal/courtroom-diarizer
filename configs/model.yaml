@@ -1,0 +1,45 @@
+# configs/model.yaml
+huggingface:
+  token_env_var:  "HF_TOKEN"
+  cache_dir:      ".cache/huggingface"
+
+models:
+  diarization:
+    id:           "pyannote/speaker-diarization-3.1"
+    revision:     "main"
+
+  segmentation:
+    id:           "pyannote/segmentation-3.0"
+    revision:     "main"
+
+  embedding:
+    id:           "pyannote/embedding"
+    revision:     "main"
+
+finetuning:
+  enabled:        false
+  base_model:     "pyannote/segmentation-3.0"
+  output_dir:     "checkpoints/finetuned"
+
+  training:
+    epochs:         20
+    batch_size:     32
+    learning_rate:  1.0e-4
+    warmup_steps:   100
+    weight_decay:   1.0e-4
+    grad_clip:      5.0
+    seed:           42
+
+  data:
+    train_dir:    "data/processed/train"
+    val_dir:      "data/processed/val"
+    test_dir:     "data/processed/test"
+    train_split:  0.8
+    val_split:    0.1
+    test_split:   0.1
+
+  checkpoint:
+    save_every_n_epochs:  5
+    keep_last_n:          3
+    best_metric:          "der"
+    save_best:            true
