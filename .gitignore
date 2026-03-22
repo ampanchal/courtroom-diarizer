@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+
+# Audio files — never commit these
+*.wav
+*.mp3
+*.flac
+*.ogg
+*.m4a
+
+# Model weights
+*.pt
+*.pth
+*.bin
+.cache/
+
+# Data and outputs — tracked by DVC, not git
+data/raw/
+data/processed/
+data/annotations/
+outputs/
+
+# Logs
+logs/
+*.log
+
+# Secrets — critical
+.env
+.env.*
+hf_token.txt
+
+# Testing
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# IDE
+.idea/
+.vscode/
+.DS_Store
