@@ -14,6 +14,7 @@ from .embeddings import EmbeddingExtractor
 from .vad import VADProcessor
 from .utils.logging import get_logger
 from .utils.checkpoints import CheckpointManager
+from .asr import ASRTranscriber
 
 logger = get_logger(__name__)
 
@@ -34,6 +35,8 @@ class DiarizationPipeline:
         self._vad       = None
         self._embedder  = None
         self._clusterer = None
+        self._asr       = None
+        self.use_asr = os.environ.get("USE_ASR", "false").lower() == "true"
         logger.info("DiarizationPipeline initialised — mode=%s", mode)
 
     def run(
@@ -64,12 +67,21 @@ class DiarizationPipeline:
         else:
             segments = self._run_manual(wav_path, num_speakers)
 
-        # Step 2: write outputs
+        # Step 2: transcribe if ASR is enabled
+        if self.use_asr:
+            asr = self._get_asr()
+            segments = asr.transcribe_and_align(wav_path, segments)
+            filled = sum(1 for s in segments if s["text"].strip())
+            logger.info("ASR: %d/%d segments have text", filled, len(segments))
+        
+        # Step 3: write outputs
         out_dir = Path(output_dir or self.cfg.paths.outputs) / session_id
         out_dir.mkdir(parents=True, exist_ok=True)
         output_paths = self._write_outputs(segments, session_id, out_dir)
 
+            
         elapsed  = time.perf_counter() - t_total
+        
         speakers = set(s["speaker"] for s in segments)
 
         result = {
@@ -231,3 +243,8 @@ class DiarizationPipeline:
         if self._clusterer is None:
             self._clusterer = SpeakerClusterer(self.cfg.clustering)
         return self._clusterer
+    
+    def _get_asr(self) -> ASRTranscriber:
+        if self._asr is None:
+            self._asr = ASRTranscriber(model_size="medium", device="cpu")
+        return self._asr
