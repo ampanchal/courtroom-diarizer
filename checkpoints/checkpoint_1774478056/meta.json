@@ -1,0 +1,10 @@
+{
+  "checkpoint_id": "checkpoint_1774478056",
+  "step": 1774478056,
+  "epoch": null,
+  "metric_name": "der",
+  "metric_value": 0.0,
+  "timestamp": "2026-03-25T22:34:16Z",
+  "config_snapshot": {},
+  "notes": "Embeddings for freesound_community-2secondsection-59838.mp3"
+}

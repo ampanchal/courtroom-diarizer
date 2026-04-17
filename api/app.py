@@ -8,6 +8,8 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Optional
 import sys
+from fastapi.responses import FileResponse
+import os
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -35,6 +37,10 @@ app = FastAPI(
     description = "On-premise speaker diarization. Audio never leaves this server.",
     version     = "1.0.0",
 )
+
+@app.get("/typist")
+async def typist_ui():
+    return FileResponse("typist.html")
 
 app.add_middleware(
     CORSMiddleware,

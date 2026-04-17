@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CourtScribe — Legal Transcript Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* ── Variables ─────────────────────────────────────────── */
+  :root {
+    --ink:      #1a1a18;
+    --ink-2:    #3d3d38;
+    --ink-3:    #6b6b64;
+    --ink-4:    #a8a89e;
+    --paper:    #f5f3ee;
+    --paper-2:  #eceae3;
+    --paper-3:  #e0ddd5;
+    --rule:     #d4d0c6;
+    --gold:     #b8922a;
+    --gold-lt:  #e8d49a;
+    --red:      #c0392b;
+    --green:    #2d6a4f;
+    --blue:     #1e3a5f;
+    --blue-lt:  #dde8f4;
+    --active:   #fffbe6;
+    --mono:     'IBM Plex Mono', monospace;
+    --sans:     'IBM Plex Sans', sans-serif;
+    --serif:    'Playfair Display', serif;
+    --shadow:   0 1px 4px rgba(0,0,0,0.10);
+    --shadow-md:0 4px 16px rgba(0,0,0,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── Header ────────────────────────────────────────────── */
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 0 24px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 2px solid var(--gold);
+  }
+
+  .brand {
+    font-family: var(--serif);
+    font-size: 18px;
+    letter-spacing: 0.02em;
+    color: var(--gold-lt);
+  }
+
+  .brand span {
+    color: var(--ink-4);
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 300;
+    margin-left: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  /* ── Buttons ────────────────────────────────────────────── */
+  .btn {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 14px;
+    border: 1px solid;
+    border-radius: 2px;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    border-color: rgba(255,255,255,0.25);
+    color: var(--paper);
+  }
+  .btn-ghost:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.5); }
+
+  .btn-gold {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: white;
+  }
+  .btn-gold:hover { background: #a07820; }
+
+  .btn-primary {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: white;
+    font-size: 13px;
+    padding: 8px 20px;
+  }
+  .btn-primary:hover { background: #162d4a; }
+
+  .btn-sm {
+    font-size: 11px;
+    padding: 4px 10px;
+    background: transparent;
+    border-color: var(--rule);
+    color: var(--ink-2);
+  }
+  .btn-sm:hover { background: var(--paper-3); }
+
+  .btn-danger { border-color: var(--red); color: var(--red); background: transparent; }
+  .btn-danger:hover { background: #fdf0ee; }
+
+  /* ── Layout ─────────────────────────────────────────────── */
+  .app {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    grid-template-rows: auto 1fr;
+    height: calc(100vh - 52px);
+  }
+
+  /* ── Upload panel ────────────────────────────────────────── */
+  #upload-panel {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px;
+    text-align: center;
+    border-bottom: 1px solid var(--rule);
+    background: var(--paper);
+  }
+
+  #upload-panel h2 {
+    font-family: var(--serif);
+    font-size: 26px;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  #upload-panel p {
+    color: var(--ink-3);
+    font-size: 14px;
+    margin-bottom: 32px;
+  }
+
+  .upload-area {
+    border: 2px dashed var(--rule);
+    border-radius: 4px;
+    padding: 40px 60px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--paper-2);
+    margin-bottom: 24px;
+    width: 100%;
+    max-width: 520px;
+  }
+
+  .upload-area:hover, .upload-area.drag-over {
+    border-color: var(--gold);
+    background: #faf8f0;
+  }
+
+  .upload-area input { display: none; }
+
+  .upload-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+  }
+
+  .upload-area p { margin: 0; color: var(--ink-3); }
+  .upload-area strong { color: var(--ink-2); }
+
+  .api-config {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 16px;
+  }
+
+  .api-config input {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 7px 12px;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    background: white;
+    color: var(--ink);
+    width: 280px;
+  }
+
+  .api-config label {
+    font-size: 12px;
+    color: var(--ink-3);
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .or-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 520px;
+    width: 100%;
+    margin: 8px 0;
+  }
+
+  .or-divider::before, .or-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+
+  .or-divider span {
+    font-size: 11px;
+    color: var(--ink-4);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── Sidebar ─────────────────────────────────────────────── */
+  #sidebar {
+    border-right: 1px solid var(--rule);
+    background: var(--paper-2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar-section {
+    padding: 16px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .sidebar-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-4);
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+
+  /* ── Audio Player ────────────────────────────────────────── */
+  #audio-player-wrap {
+    background: var(--ink);
+    padding: 14px 16px;
+    border-bottom: 1px solid #2a2a28;
+  }
+
+  .player-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .play-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--gold);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 12px;
+    color: white;
+    transition: background 0.15s;
+  }
+  .play-btn:hover { background: #a07820; }
+
+  .time-display {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-4);
+    white-space: nowrap;
+  }
+
+  .time-display strong { color: var(--paper); }
+
+  .seek-bar {
+    width: 100%;
+    height: 3px;
+    background: #3a3a38;
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+    margin-bottom: 10px;
+  }
+
+  .seek-fill {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 2px;
+    pointer-events: none;
+    width: 0%;
+    transition: width 0.1s linear;
+  }
+
+  .speed-controls {
+    display: flex;
+    gap: 4px;
+  }
+
+  .speed-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 7px;
+    border: 1px solid #3a3a38;
+    border-radius: 2px;
+    background: transparent;
+    color: var(--ink-4);
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .speed-btn:hover { border-color: var(--gold); color: var(--gold-lt); }
+  .speed-btn.active { background: var(--gold); border-color: var(--gold); color: white; }
+
+  /* ── Speaker Manager ─────────────────────────────────────── */
+  #speaker-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .speaker-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .speaker-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .speaker-name-input {
+    flex: 1;
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 8px;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    background: white;
+    color: var(--ink);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .speaker-name-input:focus { outline: none; border-color: var(--gold); }
+
+  /* ── Stats ───────────────────────────────────────────────── */
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+
+  .stat-row span:first-child { color: var(--ink-3); }
+  .stat-row strong { font-family: var(--mono); font-weight: 500; }
+
+  /* ── Keyboard shortcuts ──────────────────────────────────── */
+  .kbd-grid { display: flex; flex-direction: column; gap: 4px; }
+
+  .kbd-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--ink-3);
+  }
+
+  kbd {
+    font-family: var(--mono);
+    font-size: 10px;
+    background: white;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 1px 5px;
+    color: var(--ink-2);
+  }
+
+  /* ── Main editor ─────────────────────────────────────────── */
+  #editor {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .editor-toolbar {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--paper);
+    flex-wrap: wrap;
+  }
+
+  .toolbar-sep {
+    width: 1px;
+    height: 20px;
+    background: var(--rule);
+    margin: 0 4px;
+  }
+
+  .search-box {
+    font-family: var(--sans);
+    font-size: 12px;
+    padding: 5px 10px;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    background: white;
+    color: var(--ink);
+    width: 180px;
+  }
+
+  .search-box:focus { outline: none; border-color: var(--gold); }
+
+  /* ── Segment list ────────────────────────────────────────── */
+  #segment-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+  }
+
+  .segment {
+    display: grid;
+    grid-template-columns: 80px 180px 1fr auto;
+    gap: 0;
+    border-bottom: 1px solid var(--rule);
+    min-height: 52px;
+    transition: background 0.1s;
+    position: relative;
+  }
+
+  .segment:hover { background: #f9f7f1; }
+  .segment.active { background: var(--active); }
+  .segment.playing { background: #fffbe0; border-left: 3px solid var(--gold); }
+
+  .seg-time {
+    padding: 12px 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-4);
+    border-right: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .seg-time:hover { color: var(--gold); }
+  .seg-time span { display: block; }
+  .seg-time .dur { font-size: 10px; color: var(--ink-4); }
+
+  .seg-speaker {
+    padding: 10px 8px;
+    border-right: 1px solid var(--rule);
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .seg-speaker-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+
+  .seg-speaker-select {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border: none;
+    background: transparent;
+    color: var(--ink-2);
+    cursor: pointer;
+    padding: 0;
+    width: 100%;
+  }
+
+  .seg-speaker-select:focus { outline: none; }
+
+  .seg-text {
+    padding: 10px 12px;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.6;
+    border: none;
+    background: transparent;
+    resize: none;
+    width: 100%;
+    min-height: 52px;
+    font-family: var(--sans);
+  }
+
+  .seg-text:focus {
+    outline: none;
+    background: white;
+  }
+
+  .seg-actions {
+    padding: 8px 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .segment:hover .seg-actions { opacity: 1; }
+
+  .seg-action-btn {
+    font-size: 10px;
+    padding: 2px 5px;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    background: white;
+    cursor: pointer;
+    color: var(--ink-3);
+    white-space: nowrap;
+    transition: all 0.1s;
+  }
+
+  .seg-action-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .seg-action-btn.merge-btn:hover { border-color: var(--blue); color: var(--blue); }
+  .seg-action-btn.split-btn:hover { border-color: var(--green); color: var(--green); }
+  .seg-action-btn.del-btn:hover { border-color: var(--red); color: var(--red); }
+
+  /* ── Status bar ──────────────────────────────────────────── */
+  #status-bar {
+    padding: 6px 16px;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 11px;
+    color: var(--ink-4);
+    background: var(--paper-2);
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    display: inline-block;
+    margin-right: 4px;
+  }
+
+  .status-dot.loading { background: var(--gold); animation: pulse 1s infinite; }
+  .status-dot.error   { background: var(--red); }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ── Empty / loading states ─────────────────────────────── */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--ink-4);
+    gap: 12px;
+    padding: 40px;
+    text-align: center;
+  }
+
+  .empty-state .big-icon { font-size: 48px; opacity: 0.3; }
+  .empty-state p { font-size: 13px; max-width: 280px; }
+
+  .loading-bar {
+    width: 200px;
+    height: 3px;
+    background: var(--rule);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .loading-bar-fill {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 2px;
+    animation: loading 1.5s ease-in-out infinite;
+  }
+
+  @keyframes loading {
+    0%   { width: 0%; margin-left: 0%; }
+    50%  { width: 60%; margin-left: 20%; }
+    100% { width: 0%; margin-left: 100%; }
+  }
+
+  /* ── Transcript preview modal ────────────────────────────── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(26,26,24,0.7);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    width: 720px;
+    max-width: 95vw;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-md);
+  }
+
+  .modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .modal-header h3 {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 400;
+  }
+
+  .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .transcript-preview {
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--ink);
+    white-space: pre-wrap;
+    border: 1px solid var(--rule);
+    padding: 16px;
+    background: white;
+    border-radius: 2px;
+  }
+
+  .modal-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  /* ── Speaker colors ──────────────────────────────────────── */
+  .spk-0 { background-color: #1e3a5f; }
+  .spk-1 { background-color: #2d6a4f; }
+  .spk-2 { background-color: #b8922a; }
+  .spk-3 { background-color: #8b2635; }
+  .spk-4 { background-color: #4a3728; }
+  .spk-5 { background-color: #5c4a8a; }
+  .spk-6 { background-color: #2a6675; }
+  .spk-7 { background-color: #7a4a20; }
+
+  .spk-text-0 { color: #1e3a5f; }
+  .spk-text-1 { color: #2d6a4f; }
+  .spk-text-2 { color: #b8922a; }
+  .spk-text-3 { color: #8b2635; }
+  .spk-text-4 { color: #4a3728; }
+  .spk-text-5 { color: #5c4a8a; }
+  .spk-text-6 { color: #2a6675; }
+  .spk-text-7 { color: #7a4a20; }
+
+  /* ── Confidence flag ─────────────────────────────────────── */
+  .seg-flag {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    font-size: 9px;
+    padding: 1px 4px;
+    border-radius: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+  }
+
+  .flag-review {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffc107;
+  }
+
+  /* ── Highlight searched text ─────────────────────────────── */
+  .search-match { background: #fff3a0; }
+
+  /* ── Scrollbar ───────────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--paper-2); }
+  ::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--ink-4); }
+
+  /* ── Hidden ──────────────────────────────────────────────── */
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- ── Header ───────────────────────────────────────────────── -->
+<header>
+  <div class="brand">
+    CourtScribe
+    <span>Legal Transcript Editor</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-ghost" onclick="loadDraft()">Load Draft</button>
+    <button class="btn btn-ghost" onclick="saveDraft()">Save Draft</button>
+    <button class="btn btn-ghost" onclick="openExportModal()">Export Transcript</button>
+    <button class="btn btn-gold" onclick="document.getElementById('new-upload-btn').click()">
+      New Session
+    </button>
+    <input type="file" id="new-upload-btn" accept="audio/*" style="display:none" onchange="handleNewFile(this)">
+  </div>
+</header>
+
+<!-- ── Upload Panel ──────────────────────────────────────────── -->
+<div id="upload-panel">
+  <h2>Upload Court Session Audio</h2>
+  <p>Supported formats: WAV, MP3, FLAC, M4A &nbsp;·&nbsp; The audio is processed locally via your diarization API</p>
+
+  <div class="upload-area" id="drop-zone"
+       onclick="document.getElementById('file-input').click()"
+       ondragover="event.preventDefault();this.classList.add('drag-over')"
+       ondragleave="this.classList.remove('drag-over')"
+       ondrop="handleDrop(event)">
+    <input type="file" id="file-input" accept="audio/*" onchange="handleFileSelect(this)">
+    <div class="upload-icon">🎙</div>
+    <p><strong>Click to select</strong> or drag and drop audio file here</p>
+    <p style="font-size:12px;margin-top:6px">WAV, MP3, FLAC, M4A up to 500 MB</p>
+  </div>
+
+  <div class="api-config">
+    <label>API Endpoint</label>
+    <input type="text" id="api-url" value="http://localhost:8000/diarize"
+           placeholder="http://localhost:8000/diarize">
+    <button class="btn btn-primary" id="process-btn" onclick="processFile()">
+      Process Audio
+    </button>
+  </div>
+
+  <div class="or-divider"><span>or</span></div>
+
+  <button class="btn btn-sm" onclick="loadSampleData()" style="font-size:12px;padding:8px 16px">
+    Load sample data (demo without API)
+  </button>
+</div>
+
+<!-- ── Main App (hidden until loaded) ───────────────────────── -->
+<div class="app hidden" id="main-app">
+
+  <!-- Sidebar -->
+  <div id="sidebar">
+
+    <!-- Audio Player -->
+    <div id="audio-player-wrap">
+      <div class="player-top">
+        <button class="play-btn" id="play-btn" onclick="togglePlay()">▶</button>
+        <div class="time-display">
+          <strong id="current-time">0:00</strong>
+          <span> / <span id="total-time">0:00</span></span>
+        </div>
+        <div style="margin-left:auto">
+          <button class="btn btn-ghost" style="font-size:10px;padding:3px 8px" onclick="skipBack()">−5s</button>
+          <button class="btn btn-ghost" style="font-size:10px;padding:3px 8px" onclick="skipFwd()">+5s</button>
+        </div>
+      </div>
+      <div class="seek-bar" id="seek-bar" onclick="seekAudio(event)">
+        <div class="seek-fill" id="seek-fill"></div>
+      </div>
+      <div class="speed-controls">
+        <span style="font-size:10px;color:var(--ink-4);margin-right:4px;line-height:22px">Speed:</span>
+        <button class="speed-btn" onclick="setSpeed(0.75)">0.75×</button>
+        <button class="speed-btn active" onclick="setSpeed(1)">1×</button>
+        <button class="speed-btn" onclick="setSpeed(1.25)">1.25×</button>
+        <button class="speed-btn" onclick="setSpeed(1.5)">1.5×</button>
+        <button class="speed-btn" onclick="setSpeed(2)">2×</button>
+      </div>
+    </div>
+
+    <!-- Speaker Manager -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Speaker Labels</div>
+      <div id="speaker-list"></div>
+    </div>
+
+    <!-- Session Stats -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Session Info</div>
+      <div id="session-stats">
+        <div class="stat-row"><span>File</span><strong id="stat-file">—</strong></div>
+        <div class="stat-row"><span>Duration</span><strong id="stat-dur">—</strong></div>
+        <div class="stat-row"><span>Segments</span><strong id="stat-segs">—</strong></div>
+        <div class="stat-row"><span>Speakers</span><strong id="stat-spks">—</strong></div>
+        <div class="stat-row"><span>Words</span><strong id="stat-words">—</strong></div>
+      </div>
+    </div>
+
+    <!-- Keyboard Shortcuts -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Keyboard Shortcuts</div>
+      <div class="kbd-grid">
+        <div class="kbd-row"><span>Play / Pause</span><kbd>Space</kbd></div>
+        <div class="kbd-row"><span>Rewind 5s</span><kbd>←</kbd></div>
+        <div class="kbd-row"><span>Forward 5s</span><kbd>→</kbd></div>
+        <div class="kbd-row"><span>Jump to segment</span><kbd>↑↓</kbd></div>
+        <div class="kbd-row"><span>Slower</span><kbd>[</kbd></div>
+        <div class="kbd-row"><span>Faster</span><kbd>]</kbd></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Editor -->
+  <div id="editor">
+    <div class="editor-toolbar">
+      <span style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.08em">
+        Segments
+      </span>
+      <div class="toolbar-sep"></div>
+      <input type="text" class="search-box" id="search-box"
+             placeholder="Search transcript…"
+             oninput="filterSegments(this.value)">
+      <div class="toolbar-sep"></div>
+      <select id="filter-speaker" class="search-box" style="width:160px"
+              onchange="filterBySpeaker(this.value)">
+        <option value="">All speakers</option>
+      </select>
+      <div class="toolbar-sep"></div>
+      <button class="btn btn-sm" onclick="mergeConsecutiveSame()">Auto-merge same speaker</button>
+      <button class="btn btn-sm" onclick="clearAllText()">Clear all text</button>
+      <div style="margin-left:auto;font-size:11px;color:var(--ink-4)" id="unsaved-indicator"></div>
+    </div>
+
+    <!-- Segment list header -->
+    <div style="display:grid;grid-template-columns:80px 180px 1fr auto;background:var(--paper-3);border-bottom:1px solid var(--rule);padding:6px 0">
+      <div style="padding:0 10px;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-4)">Time</div>
+      <div style="padding:0 8px;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-4)">Speaker</div>
+      <div style="padding:0 12px;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-4)">Transcription</div>
+      <div style="width:60px"></div>
+    </div>
+
+    <div id="segment-list">
+      <div class="empty-state">
+        <div class="big-icon">📋</div>
+        <p>No segments loaded. Upload an audio file to begin.</p>
+      </div>
+    </div>
+
+    <div id="status-bar">
+      <span><span class="status-dot" id="status-dot"></span><span id="status-text">Ready</span></span>
+      <span id="status-detail"></span>
+      <span style="margin-left:auto" id="status-modified"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Export Modal ──────────────────────────────────────────── -->
+<div class="modal-overlay" id="export-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Export Transcript</h3>
+      <button class="btn btn-sm" onclick="closeExportModal()">✕ Close</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-3);display:block;margin-bottom:6px">
+            Case / Matter Title
+          </label>
+          <input type="text" id="case-title" placeholder="State v. Example, Case No. 2025/CR/001"
+                 style="width:100%;padding:7px 10px;border:1px solid var(--rule);border-radius:2px;font-family:var(--sans);font-size:13px">
+        </div>
+        <div style="flex:1;min-width:200px">
+          <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-3);display:block;margin-bottom:6px">
+            Date of Hearing
+          </label>
+          <input type="date" id="hearing-date"
+                 style="width:100%;padding:7px 10px;border:1px solid var(--rule);border-radius:2px;font-family:var(--sans);font-size:13px">
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-3);display:block;margin-bottom:6px">
+          Include timestamps
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+          <input type="checkbox" id="include-timestamps" checked>
+          Show start time for each segment
+        </label>
+      </div>
+      <div class="transcript-preview" id="transcript-preview">
+        Preview will appear here…
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-sm" onclick="refreshPreview()">Refresh Preview</button>
+      <button class="btn btn-primary" onclick="downloadTxt()">Download .txt</button>
+    </div>
+  </div>
+</div>
+
+<audio id="audio-el" style="display:none"></audio>
+
+<script>
+// ── State ───────────────────────────────────────────────────────
+let state = {
+  segments:     [],    // [{id, speaker, start, end, duration, text, flag}]
+  speakers:     {},    // {SPEAKER_00: {name, color, index}}
+  audioFile:    null,
+  modified:     false,
+  playingIdx:   -1,
+};
+
+const SPEAKER_COLORS = ['spk-0','spk-1','spk-2','spk-3','spk-4','spk-5','spk-6','spk-7'];
+const LEGAL_NAMES    = ['THE COURT','COUNSEL FOR PETITIONER','COUNSEL FOR RESPONDENT',
+                        'WITNESS','THE CLERK','INTERPRETER','AMICUS','PROSECUTOR'];
+
+// ── Audio ───────────────────────────────────────────────────────
+const audio = document.getElementById('audio-el');
+
+audio.addEventListener('timeupdate', () => {
+  const pct = audio.currentTime / audio.duration * 100 || 0;
+  document.getElementById('seek-fill').style.width = pct + '%';
+  document.getElementById('current-time').textContent = fmtTime(audio.currentTime);
+  highlightActiveSegment();
+});
+
+audio.addEventListener('ended', () => {
+  document.getElementById('play-btn').textContent = '▶';
+});
+
+audio.addEventListener('loadedmetadata', () => {
+  document.getElementById('total-time').textContent = fmtTime(audio.duration);
+});
+
+function togglePlay() {
+  if (audio.paused) {
+    audio.play();
+    document.getElementById('play-btn').textContent = '⏸';
+  } else {
+    audio.pause();
+    document.getElementById('play-btn').textContent = '▶';
+  }
+}
+
+function seekAudio(e) {
+  const bar  = document.getElementById('seek-bar');
+  const rect = bar.getBoundingClientRect();
+  const pct  = (e.clientX - rect.left) / rect.width;
+  audio.currentTime = pct * audio.duration;
+}
+
+function skipBack() { audio.currentTime = Math.max(0, audio.currentTime - 5); }
+function skipFwd()  { audio.currentTime = Math.min(audio.duration, audio.currentTime + 5); }
+
+function setSpeed(s) {
+  audio.playbackRate = s;
+  document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function jumpToSegment(start) {
+  audio.currentTime = start;
+  if (audio.paused) audio.play();
+  document.getElementById('play-btn').textContent = '⏸';
+}
+
+function highlightActiveSegment() {
+  const t = audio.currentTime;
+  let active = -1;
+  state.segments.forEach((s, i) => {
+    if (t >= s.start && t <= s.end) active = i;
+  });
+  if (active === state.playingIdx) return;
+  state.playingIdx = active;
+  document.querySelectorAll('.segment').forEach((el, i) => {
+    el.classList.toggle('playing', i === active);
+  });
+  if (active >= 0) {
+    const el = document.querySelectorAll('.segment')[active];
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+// ── File handling ───────────────────────────────────────────────
+let selectedFile = null;
+
+function handleFileSelect(input) {
+  if (input.files[0]) {
+    selectedFile = input.files[0];
+    setStatus('ready', `Selected: ${input.files[0].name}`);
+  }
+}
+
+function handleNewFile(input) {
+  if (input.files[0]) {
+    selectedFile = input.files[0];
+    document.getElementById('upload-panel').classList.remove('hidden');
+    document.getElementById('main-app').classList.add('hidden');
+    processFile();
+  }
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('audio/')) {
+    selectedFile = file;
+    processFile();
+  }
+}
+
+async function processFile() {
+  if (!selectedFile) {
+    alert('Please select an audio file first.');
+    return;
+  }
+
+  const apiUrl = document.getElementById('api-url').value.trim();
+  setStatus('loading', `Processing ${selectedFile.name}…`);
+
+  document.getElementById('upload-panel').classList.add('hidden');
+  document.getElementById('main-app').classList.remove('hidden');
+  showLoadingState();
+
+  try {
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) throw new Error(`API error ${response.status}: ${await response.text()}`);
+
+    const data = await response.json();
+    loadDiarizationResult(data, selectedFile.name);
+
+    // Load audio for playback
+    audio.src = URL.createObjectURL(selectedFile);
+    document.getElementById('stat-file').textContent = selectedFile.name.substring(0, 20) + '…';
+
+    setStatus('ready', `Loaded ${data.segments.length} segments`);
+    setModified(false);
+
+  } catch (err) {
+    setStatus('error', 'API error — check endpoint and try again');
+    document.getElementById('segment-list').innerHTML = `
+      <div class="empty-state">
+        <div class="big-icon">⚠️</div>
+        <p style="color:var(--red)">Failed to process audio:<br>${err.message}</p>
+        <button class="btn btn-primary" onclick="document.getElementById('upload-panel').classList.remove('hidden');document.getElementById('main-app').classList.add('hidden')">
+          Try Again
+        </button>
+      </div>`;
+  }
+}
+
+// ── Load result ─────────────────────────────────────────────────
+function loadDiarizationResult(data, filename) {
+  // Build speaker registry
+  const speakerIds = [...new Set(data.segments.map(s => s.speaker))].sort();
+  state.speakers = {};
+  speakerIds.forEach((id, i) => {
+    state.speakers[id] = {
+      name:  LEGAL_NAMES[i] || id.replace('_', ' '),
+      color: SPEAKER_COLORS[i % SPEAKER_COLORS.length],
+      index: i,
+    };
+  });
+
+  // Build segments
+  state.segments = data.segments.map((s, i) => ({
+    id:       i,
+    speaker:  s.speaker,
+    start:    s.start,
+    end:      s.end,
+    duration: s.duration,
+    text:     s.text || '',
+    flag:     s.duration < 0.8 ? 'review' : null,
+  }));
+
+  state.audioFile = filename;
+  renderAll();
+  updateStats();
+}
+
+// ── Render ──────────────────────────────────────────────────────
+function renderAll() {
+  renderSpeakerList();
+  renderSegments(state.segments);
+  renderFilterDropdown();
+}
+
+function renderSpeakerList() {
+  const el = document.getElementById('speaker-list');
+  el.innerHTML = '';
+  Object.entries(state.speakers).forEach(([id, spk]) => {
+    const div = document.createElement('div');
+    div.className = 'speaker-item';
+    div.innerHTML = `
+      <div class="speaker-dot ${spk.color}"></div>
+      <input type="text" class="speaker-name-input"
+             value="${spk.name}"
+             data-id="${id}"
+             placeholder="Speaker name"
+             onchange="renameSpeaker('${id}', this.value)">
+    `;
+    el.appendChild(div);
+  });
+}
+
+function renderFilterDropdown() {
+  const sel = document.getElementById('filter-speaker');
+  sel.innerHTML = '<option value="">All speakers</option>';
+  Object.entries(state.speakers).forEach(([id, spk]) => {
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = spk.name;
+    sel.appendChild(opt);
+  });
+}
+
+function renderSegments(segs) {
+  const list = document.getElementById('segment-list');
+  if (!segs.length) {
+    list.innerHTML = '<div class="empty-state"><p>No segments match.</p></div>';
+    return;
+  }
+  list.innerHTML = '';
+  segs.forEach((seg, visIdx) => {
+    const spk   = state.speakers[seg.speaker];
+    const color = spk ? spk.color : 'spk-0';
+    const name  = spk ? spk.name : seg.speaker;
+
+    const div = document.createElement('div');
+    div.className = 'segment';
+    div.dataset.id = seg.id;
+
+    // Speaker options
+    const opts = Object.entries(state.speakers).map(([sid, s]) =>
+      `<option value="${sid}" ${sid === seg.speaker ? 'selected' : ''}>${s.name}</option>`
+    ).join('');
+
+    div.innerHTML = `
+      ${seg.flag === 'review' ? '<span class="seg-flag flag-review">Review</span>' : ''}
+      <div class="seg-time" onclick="jumpToSegment(${seg.start})">
+        <span>${fmtTime(seg.start)}</span>
+        <span class="dur">${seg.duration.toFixed(1)}s</span>
+      </div>
+      <div class="seg-speaker">
+        <div class="seg-speaker-dot ${color}"></div>
+        <select class="seg-speaker-select spk-text-${spk ? spk.index : 0}"
+                onchange="changeSpeaker(${seg.id}, this.value)">${opts}</select>
+      </div>
+      <textarea class="seg-text" rows="1"
+                placeholder="[transcription]"
+                onchange="changeText(${seg.id}, this.value)"
+                oninput="autoResize(this)">${seg.text}</textarea>
+      <div class="seg-actions">
+        <button class="seg-action-btn split-btn" onclick="splitSegment(${seg.id})" title="Split at midpoint">Split</button>
+        <button class="seg-action-btn merge-btn" onclick="mergeWithNext(${seg.id})" title="Merge with next">Merge↓</button>
+        <button class="seg-action-btn del-btn" onclick="deleteSegment(${seg.id})" title="Delete segment">Del</button>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+
+  // Auto-resize all textareas
+  list.querySelectorAll('.seg-text').forEach(autoResize);
+}
+
+function showLoadingState() {
+  document.getElementById('segment-list').innerHTML = `
+    <div class="empty-state">
+      <div class="big-icon">⚙️</div>
+      <p>Diarizing audio… this may take a few minutes.</p>
+      <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+    </div>`;
+}
+
+// ── Segment operations ──────────────────────────────────────────
+function changeSpeaker(id, newSpeaker) {
+  const seg = state.segments.find(s => s.id === id);
+  if (seg) { seg.speaker = newSpeaker; setModified(true); }
+}
+
+function changeText(id, text) {
+  const seg = state.segments.find(s => s.id === id);
+  if (seg) { seg.text = text; setModified(true); updateStats(); }
+}
+
+function deleteSegment(id) {
+  state.segments = state.segments.filter(s => s.id !== id);
+  renderSegments(state.segments);
+  updateStats();
+  setModified(true);
+}
+
+function splitSegment(id) {
+  const idx = state.segments.findIndex(s => s.id === id);
+  const seg = state.segments[idx];
+  if (!seg) return;
+  const mid = (seg.start + seg.end) / 2;
+  const newId = Date.now();
+  const half1 = { ...seg, end: mid, duration: mid - seg.start, text: seg.text };
+  const half2 = { ...seg, id: newId, start: mid, duration: seg.end - mid, text: '' };
+  state.segments.splice(idx, 1, half1, half2);
+  renderSegments(state.segments);
+  setModified(true);
+}
+
+function mergeWithNext(id) {
+  const idx = state.segments.findIndex(s => s.id === id);
+  if (idx < 0 || idx >= state.segments.length - 1) return;
+  const a = state.segments[idx];
+  const b = state.segments[idx + 1];
+  const merged = {
+    ...a,
+    end:      b.end,
+    duration: b.end - a.start,
+    text:     [a.text, b.text].filter(Boolean).join(' '),
+  };
+  state.segments.splice(idx, 2, merged);
+  renderSegments(state.segments);
+  setModified(true);
+  updateStats();
+}
+
+function mergeConsecutiveSame() {
+  let changed = false;
+  let i = 0;
+  const merged = [];
+  while (i < state.segments.length) {
+    let seg = { ...state.segments[i] };
+    while (i + 1 < state.segments.length &&
+           state.segments[i + 1].speaker === seg.speaker &&
+           state.segments[i + 1].start - seg.end < 1.0) {
+      const next = state.segments[i + 1];
+      seg.end      = next.end;
+      seg.duration = next.end - seg.start;
+      seg.text     = [seg.text, next.text].filter(Boolean).join(' ');
+      i++;
+      changed = true;
+    }
+    merged.push(seg);
+    i++;
+  }
+  if (changed) {
+    state.segments = merged;
+    renderSegments(state.segments);
+    updateStats();
+    setModified(true);
+    setStatus('ready', 'Consecutive same-speaker segments merged');
+  }
+}
+
+function clearAllText() {
+  if (!confirm('Clear all transcription text? (Speaker labels are kept)')) return;
+  state.segments.forEach(s => s.text = '');
+  renderSegments(state.segments);
+  setModified(true);
+}
+
+// ── Speaker rename ──────────────────────────────────────────────
+function renameSpeaker(id, newName) {
+  if (state.speakers[id]) {
+    state.speakers[id].name = newName;
+    renderSegments(state.segments);
+    renderFilterDropdown();
+    setModified(true);
+  }
+}
+
+// ── Search / filter ─────────────────────────────────────────────
+function filterSegments(query) {
+  const q = query.toLowerCase().trim();
+  if (!q) { renderSegments(state.segments); return; }
+  const filtered = state.segments.filter(s =>
+    s.text.toLowerCase().includes(q) ||
+    (state.speakers[s.speaker]?.name || '').toLowerCase().includes(q)
+  );
+  renderSegments(filtered);
+}
+
+function filterBySpeaker(id) {
+  if (!id) { renderSegments(state.segments); return; }
+  renderSegments(state.segments.filter(s => s.speaker === id));
+}
+
+// ── Stats ───────────────────────────────────────────────────────
+function updateStats() {
+  const dur   = state.segments.reduce((a, s) => Math.max(a, s.end), 0);
+  const words = state.segments.reduce((a, s) => a + s.text.split(/\s+/).filter(Boolean).length, 0);
+  document.getElementById('stat-dur').textContent  = fmtTime(dur);
+  document.getElementById('stat-segs').textContent = state.segments.length;
+  document.getElementById('stat-spks').textContent = Object.keys(state.speakers).length;
+  document.getElementById('stat-words').textContent= words;
+}
+
+// ── Save / Load draft ───────────────────────────────────────────
+function saveDraft() {
+  if (!state.segments.length) { alert('Nothing to save.'); return; }
+  const draft = {
+    version:  '1.0',
+    saved:    new Date().toISOString(),
+    filename: state.audioFile,
+    speakers: state.speakers,
+    segments: state.segments,
+  };
+  downloadBlob(JSON.stringify(draft, null, 2), 'transcript_draft.json', 'application/json');
+  setModified(false);
+  setStatus('ready', 'Draft saved');
+}
+
+function loadDraft() {
+  const input = document.createElement('input');
+  input.type  = 'file';
+  input.accept= '.json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const draft = JSON.parse(ev.target.result);
+        state.speakers = draft.speakers;
+        state.segments = draft.segments;
+        state.audioFile= draft.filename;
+        document.getElementById('upload-panel').classList.add('hidden');
+        document.getElementById('main-app').classList.remove('hidden');
+        renderAll();
+        updateStats();
+        setModified(false);
+        setStatus('ready', `Draft loaded — ${draft.segments.length} segments`);
+        document.getElementById('stat-file').textContent = draft.filename || 'Draft';
+      } catch (err) {
+        alert('Failed to load draft: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// ── Export ──────────────────────────────────────────────────────
+function openExportModal() {
+  document.getElementById('export-modal').classList.add('open');
+  document.getElementById('hearing-date').value = new Date().toISOString().split('T')[0];
+  refreshPreview();
+}
+
+function closeExportModal() {
+  document.getElementById('export-modal').classList.remove('open');
+}
+
+function buildTranscript() {
+  const title    = document.getElementById('case-title').value || 'COURT PROCEEDINGS';
+  const date     = document.getElementById('hearing-date').value;
+  const showTime = document.getElementById('include-timestamps').checked;
+
+  let lines = [];
+  lines.push('='.repeat(60));
+  lines.push(title.toUpperCase());
+  lines.push(`Date of Hearing: ${date || '_______________'}`);
+  lines.push('='.repeat(60));
+  lines.push('');
+
+  let lineNo = 1;
+  let prevSpeaker = null;
+
+  state.segments.forEach(seg => {
+    const spk  = state.speakers[seg.speaker];
+    const name = spk ? spk.name : seg.speaker;
+    const text = seg.text.trim() || '[INAUDIBLE]';
+
+    if (name !== prevSpeaker) {
+      if (prevSpeaker !== null) lines.push('');
+      const ts = showTime ? `  [${fmtTime(seg.start)}]` : '';
+      lines.push(`${String(lineNo).padStart(4, ' ')}  ${name}:${ts}`);
+      lineNo++;
+      prevSpeaker = name;
+    }
+
+    // Wrap text at 70 chars
+    const words = text.split(' ');
+    let line = '';
+    words.forEach(w => {
+      if ((line + ' ' + w).trim().length > 70) {
+        lines.push(`${String(lineNo).padStart(4, ' ')}      ${line.trim()}`);
+        lineNo++;
+        line = w;
+      } else {
+        line = (line + ' ' + w).trim();
+      }
+    });
+    if (line) {
+      lines.push(`${String(lineNo).padStart(4, ' ')}      ${line.trim()}`);
+      lineNo++;
+    }
+  });
+
+  lines.push('');
+  lines.push('='.repeat(60));
+  lines.push('END OF TRANSCRIPT');
+  lines.push('='.repeat(60));
+  lines.push('');
+  lines.push('CERTIFICATE OF ACCURACY');
+  lines.push('');
+  lines.push('I certify that the foregoing is a true and accurate');
+  lines.push('transcript of the proceedings.');
+  lines.push('');
+  lines.push('Signed: ____________________  Date: ________________');
+
+  return lines.join('\n');
+}
+
+function refreshPreview() {
+  document.getElementById('transcript-preview').textContent = buildTranscript();
+}
+
+function downloadTxt() {
+  const txt = buildTranscript();
+  const title = document.getElementById('case-title').value || 'transcript';
+  const name  = title.replace(/[^a-z0-9]/gi, '_').substring(0, 40) + '.txt';
+  downloadBlob(txt, name, 'text/plain');
+  closeExportModal();
+}
+
+// ── Sample data (demo) ──────────────────────────────────────────
+function loadSampleData() {
+  const sample = {
+    session_id: 'demo',
+    segments: [
+      {speaker:'SPEAKER_00',start:1.2, end:5.8, duration:4.6, text:'The court will come to order. This is case number 2025 slash CR slash 042.'},
+      {speaker:'SPEAKER_01',start:6.1, end:9.3, duration:3.2, text:'Counsel for the petitioner is ready, Your Honour.'},
+      {speaker:'SPEAKER_02',start:9.7, end:12.4,duration:2.7, text:'Counsel for the respondent is ready.'},
+      {speaker:'SPEAKER_00',start:12.8,end:18.2,duration:5.4, text:'Very well. The matter before the court today concerns the admissibility of evidence. Mr. Mehta, you may proceed.'},
+      {speaker:'SPEAKER_01',start:18.5,end:28.1,duration:9.6, text:'Thank you, Your Honour. The petitioner submits that the evidence obtained on the fourteenth of March was procured without proper warrant and therefore inadmissible under Section 165 of the Evidence Act.'},
+      {speaker:'SPEAKER_00',start:28.4,end:31.2,duration:2.8, text:'Ms. Kulkarni, your response?'},
+      {speaker:'SPEAKER_02',start:31.5,end:44.8,duration:13.3,text:'Your Honour, the respondent respectfully disagrees. The evidence was gathered under exigent circumstances. Officers had reasonable grounds to believe that evidence would be destroyed if they delayed. We rely on the judgement in State versus Sharma 2019.'},
+      {speaker:'SPEAKER_01',start:45.1,end:47.3,duration:2.2, text:'Objection, Your Honour. That precedent is distinguishable on facts.'},
+      {speaker:'SPEAKER_00',start:47.6,end:51.4,duration:3.8, text:'Noted. The court will hear full arguments on this point. We will recess for fifteen minutes.'},
+      {speaker:'SPEAKER_03',start:51.6,end:53.2,duration:1.6, text:'All rise.'},
+    ]
+  };
+  loadDiarizationResult(sample, 'demo_hearing.mp3');
+  document.getElementById('upload-panel').classList.add('hidden');
+  document.getElementById('main-app').classList.remove('hidden');
+  document.getElementById('stat-file').textContent = 'demo_hearing.mp3';
+  setStatus('ready', 'Sample data loaded — 10 segments');
+}
+
+// ── Helpers ─────────────────────────────────────────────────────
+function fmtTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${String(sec).padStart(2,'0')}`;
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+function downloadBlob(content, filename, type) {
+  const a = document.createElement('a');
+  a.href  = URL.createObjectURL(new Blob([content], { type }));
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function setStatus(type, msg, detail) {
+  const dot = document.getElementById('status-dot');
+  dot.className = `status-dot ${type === 'loading' ? 'loading' : type === 'error' ? 'error' : ''}`;
+  document.getElementById('status-text').textContent = msg;
+  document.getElementById('status-detail').textContent = detail || '';
+}
+
+function setModified(val) {
+  state.modified = val;
+  document.getElementById('status-modified').textContent = val ? '● Unsaved changes' : '';
+  document.getElementById('unsaved-indicator').textContent = val ? '● Unsaved changes' : '';
+}
+
+// ── Keyboard shortcuts ───────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  const tag = document.activeElement.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'ArrowLeft')  { e.preventDefault(); skipBack(); }
+  if (e.code === 'ArrowRight') { e.preventDefault(); skipFwd(); }
+  if (e.key === '[') { audio.playbackRate = Math.max(0.5, audio.playbackRate - 0.25); }
+  if (e.key === ']') { audio.playbackRate = Math.min(2.5, audio.playbackRate + 0.25); }
+});
+
+// ── Warn on unsaved changes ──────────────────────────────────────
+window.addEventListener('beforeunload', e => {
+  if (state.modified) { e.preventDefault(); e.returnValue = ''; }
+});
+</script>
+</body>
+</html>

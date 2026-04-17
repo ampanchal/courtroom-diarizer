@@ -29,8 +29,6 @@ class VADProcessor:
         model = Model.from_pretrained(self.cfg.model, use_auth_token=self.hf_token)
         pipeline = VoiceActivityDetection(segmentation=model)
         pipeline.instantiate({
-            "onset":            self.cfg.onset,
-            "offset":           self.cfg.offset,
             "min_duration_on":  self.cfg.min_duration_on,
             "min_duration_off": self.cfg.min_duration_off,
         })

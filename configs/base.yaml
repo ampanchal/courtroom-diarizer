@@ -35,17 +35,22 @@ segmentation:
   min_segment_s:      0.5
 
 embedding:
-  model:              "pyannote/embedding"
-  dimension:          192
-  normalize:          true
+  model:    "pyannote/embedding"
+  backend:  "pyannote"        # pyannote | wavlm (experimental)
+  dimension: 192
+  normalize: true
 
 clustering:
   method:             "ahc"
+  distance_threshold: 0.92
   metric:             "cosine"
   linkage:            "average"
-  distance_threshold: 0.65
-  spectral_sigma:     0.5
+  spectral_sigma:     0.25
   max_speakers:       10
+
+# asr:
+#   model_size:         "medium"
+#   language:            null        # null = auto-detect, or set "hi", "en", "mr"
 
 pipeline:
   model:              "pyannote/speaker-diarization-3.1"
