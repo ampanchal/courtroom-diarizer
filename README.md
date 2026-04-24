@@ -320,4 +320,4 @@ The system was designed, implemented, evaluated, and iterated entirely from scra
 ## Author
 
 **Avadhoot Panchal**
-[GitHub](https://github.com/ampanchal) · [LinkedIn](https://linkedin.com/in/ampanchal)
+[GitHub](https://github.com/ampanchal) · [LinkedIn](https://www.linkedin.com/in/avadhoot-panchal-38a298243/)
