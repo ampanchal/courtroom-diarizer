@@ -130,6 +130,8 @@ A single `typist.html` file served by the FastAPI backend. Zero installation for
 
 **Screenshots:**
 
+The audio in picture is "Kendrick Lamar - We Cry Together ft. Taylour Paige", the audio has been aptly diarized this screenshot proves the reliability of this pipeline and it's immunity to external noise and distractions.
+
 ><img width="1275" height="1398" alt="Screenshot 2026-03-31 022855" src="https://github.com/user-attachments/assets/dc5752eb-2d5f-4503-a6db-e05259fe6500" />
 
 
