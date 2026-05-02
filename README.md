@@ -286,7 +286,7 @@ docker run --gpus all -p 8000:8000 \
 | WavLM backend comparison | ✅ Complete |
 | SCOTUS oral arguments download | ⏳ Pending compute |
 | Fine-tuning on courtroom domain data | ⏳ Pending SCOTUS dataset |
-| Multi-language support (Hindi/Marathi/English) | ⏳ In progress |
+| Multi-language support (Hindi/Marathi/English) | ✅ Complete |
 | Real-time streaming diarization | 🔲 Planned |
 
 ---
