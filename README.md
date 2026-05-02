@@ -1,3 +1,4 @@
+<img width="1275" height="1398" alt="Screenshot 2026-03-31 022855" src="https://github.com/user-attachments/assets/0972a340-4b35-4093-b967-007cc728379f" />
 # CourtScribe — AI-Powered Courtroom Transcription System
 
 > **Reducing legal typist workload by automating speaker identification, segmentation, and transcription in courtroom proceedings.**
@@ -130,9 +131,8 @@ A single `typist.html` file served by the FastAPI backend. Zero installation for
 
 **Screenshots:**
 
-> *(Add your screenshots here — drag them into the GitHub editor)*
->
-> Suggested: `docs/screenshots/typist_main.png`, `docs/screenshots/typist_export.png`
+><img width="1275" height="1398" alt="Screenshot 2026-03-31 022855" src="https://github.com/user-attachments/assets/dc5752eb-2d5f-4503-a6db-e05259fe6500" />
+
 
 ---
 
