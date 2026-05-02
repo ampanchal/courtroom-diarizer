@@ -1071,20 +1071,24 @@ async function processFile() {
   showLoadingState();
 
   try {
-    const formData = new FormData();
+    const formData   = new FormData();
     formData.append('file', selectedFile);
+
+    const controller = new AbortController();
+    const timeoutId  = setTimeout(() => controller.abort(), 900000); // 15 min
 
     const response = await fetch(apiUrl, {
       method: 'POST',
-      body: formData,
+      body:   formData,
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
 
     if (!response.ok) throw new Error(`API error ${response.status}: ${await response.text()}`);
 
     const data = await response.json();
     loadDiarizationResult(data, selectedFile.name);
 
-    // Load audio for playback
     audio.src = URL.createObjectURL(selectedFile);
     document.getElementById('stat-file').textContent = selectedFile.name.substring(0, 20) + '…';
 

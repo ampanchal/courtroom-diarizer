@@ -40,7 +40,15 @@ app = FastAPI(
 
 @app.get("/typist")
 async def typist_ui():
-    return FileResponse("typist.html")
+    return FileResponse(
+        "typist.html",
+        headers={
+            # Prevent stale cached UI assets from old runs.
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
 
 app.add_middleware(
     CORSMiddleware,
