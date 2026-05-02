@@ -1,4 +1,3 @@
-<img width="1275" height="1398" alt="Screenshot 2026-03-31 022855" src="https://github.com/user-attachments/assets/0972a340-4b35-4093-b967-007cc728379f" />
 # CourtScribe — AI-Powered Courtroom Transcription System
 
 > **Reducing legal typist workload by automating speaker identification, segmentation, and transcription in courtroom proceedings.**
